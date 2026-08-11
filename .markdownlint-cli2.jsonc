@@ -1,0 +1,11 @@
+{
+  // CLAUDE.md is a tool include directive, not a conventional Markdown page.
+  // Golden files are byte-exact renderer fixtures and are linted indirectly
+  // through their source templates and tests.
+  "gitignore": true,
+  "config": {
+    "MD013": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["CLAUDE.md", "tests/unit/golden/**"]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "20000",
+  "key": "DC-77",
+  "self": "https://jira.cassette-dc.example/rest/api/2/issue/20000",
+  "fields": {
+    "summary": "Cassette issue (Data Center)",
+    "description": "DC cassette body with _emphasis_ and !diagram.png!.\n\n* bullet one\n* bullet two",
+    "issuetype": {"id": "3", "name": "Task", "subtask": false},
+    "status": {"id": "5", "name": "Resolved"},
+    "priority": {"id": "3", "name": "Medium"},
+    "resolution": {"id": "1", "name": "Done"},
+    "assignee": {
+      "name": "calice",
+      "key": "calice",
+      "displayName": "DC Alice",
+      "emailAddress": "alice@cassette-dc.example"
+    },
+    "reporter": {
+      "name": "cbob",
+      "key": "cbob",
+      "displayName": "DC Bob",
+      "emailAddress": "bob@cassette-dc.example"
+    },
+    "created": "2025-10-12T11:20:00.000+0000",
+    "updated": "2025-11-20T09:05:00.000+0000",
+    "resolutiondate": "2025-11-20T09:05:00.000+0000",
+    "labels": ["cassette", "dc"],
+    "components": [{"id": "7", "name": "Platform"}],
+    "fixVersions": [{"id": "9", "name": "5.4"}],
+    "versions": [{"id": "9", "name": "5.4"}],
+    "parent": null,
+    "subtasks": [],
+    "issuelinks": [],
+    "attachment": [
+      {
+        "id": "40001",
+        "filename": "diagram.png",
+        "size": 9,
+        "mimeType": "image/png",
+        "content": "https://jira.cassette-dc.example/secure/attachment/40001/diagram.png",
+        "created": "2025-10-13T08:30:00.000+0000",
+        "author": {"name": "calice", "key": "calice", "displayName": "DC Alice"}
+      }
+    ],
+    "comment": {
+      "comments": [
+        {
+          "id": "50001",
+          "body": "DC cassette comment",
+          "author": {"name": "cbob", "key": "cbob", "displayName": "DC Bob"},
+          "created": "2025-10-14T13:00:00.000+0000",
+          "updated": "2025-10-14T13:00:00.000+0000"
+        }
+      ],
+      "maxResults": 1,
+      "total": 1,
+      "startAt": 0
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# The guided UAT walkthroughs must keep LF endings in the working tree even on
+# Windows checkouts (core.autocrlf=true): tests/UAT guards assert plain LF, and
+# the scripts run under Git Bash as often as under a Linux shell.
+tests/UAT/*.sh text eol=lf
+
+# Byte-parity golden fixtures. The renderer emits LF, so a CRLF checkout would
+# break every golden comparison on Windows.
+tests/unit/golden/*.md text eol=lf
+
+# Recorded HTTP payloads are compared byte-for-byte; never translate them.
+tests/integration/cassettes/*.json text eol=lf
+tests/integration/cassettes/*.png binary
+tests/unit/fixtures/*.json text eol=lf
+
+# Shipped templates render into byte-parity output.
+src/jira2md/templates/*.j2 text eol=lf

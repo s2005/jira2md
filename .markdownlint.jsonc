@@ -1,0 +1,5 @@
+{
+  // Line length is not enforced: the guides and reference tables in this
+  // repository read better unwrapped than hard-wrapped at an arbitrary column.
+  "MD013": false
+}

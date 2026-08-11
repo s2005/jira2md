@@ -1,0 +1,25 @@
+{% for issue in issues %}
+{% if not loop.first %}
+
+---
+
+{% endif %}
+# {{ issue.key }} -- {{ issue.summary }}
+
+**Status:** {{ issue.status }} | **Type:** {{ issue.issue_type }}
+{% if issue.description %}
+
+{{ issue.description | wiki }}
+{% endif %}
+{% if issue.comments %}
+
+## Comments
+
+{% for c in issue.comments %}
+### {{ c.author | jirauser }} -- {{ c.created | isodate }}
+
+{{ c.body | wiki }}
+
+{% endfor %}
+{% endif %}
+{% endfor %}

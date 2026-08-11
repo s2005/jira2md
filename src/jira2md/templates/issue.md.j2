@@ -1,0 +1,51 @@
+{% if config.frontmatter %}
+---
+{{ issue.frontmatter | yaml }}---
+{% endif %}
+
+# {{ issue.key }} -- {{ issue.summary }}
+{% if issue.parent %}
+
+**Parent:** {{ issue.parent.key }} -- {{ issue.parent.summary }}
+{% endif %}
+
+{% if issue.description %}
+## Description
+
+{{ issue.description | wiki }}
+{% endif %}
+{% if issue.attachments %}
+
+## Attachments
+
+{% for a in issue.attachments %}
+- [{{ a.filename }}]({{ a.path }}) ({{ a.size | filesizeformat }})
+{% endfor %}
+{% endif %}
+{% if issue.subtasks %}
+
+## Sub-tasks
+
+{% for s in issue.subtasks %}
+- {{ s.key }} -- {{ s.summary }} *({{ s.status }})*
+{% endfor %}
+{% endif %}
+{% if issue.links %}
+
+## Linked work items
+
+{% for l in issue.links %}
+- **{{ l.link_type }}** {{ l.target.key }} -- {{ l.target.summary }} *({{ l.target.status }})*
+{% endfor %}
+{% endif %}
+{% if issue.comments %}
+
+## Comments
+
+{% for c in issue.comments %}
+### {{ c.author | jirauser }} -- {{ c.created | isodate }}
+
+{{ c.body | wiki }}
+
+{% endfor %}
+{% endif %}

@@ -1,0 +1,161 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.12.2
+          python-version: "3.14"
+          enable-cache: false
+      - name: Install development dependencies
+        run: uv sync --locked --all-extras --dev
+      - name: Check lock file
+        run: uv lock --check
+      - name: Run Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Run mypy
+        run: uv run mypy src
+      - name: Run non-Markdown pre-commit hooks
+        run: uv run pre-commit run --all-files
+
+  markdown:
+    name: Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
+        with:
+          globs: |
+            **/*.md
+
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.12.2
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install development dependencies
+        run: uv sync --locked --all-extras --dev
+      - name: Run unit tests
+        run: uv run pytest tests/unit/ -q --cov=src/jira2md --cov-report=term-missing
+      - name: Run cassette integration tests
+        run: uv run pytest tests/integration/ -q --integration
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.12.2
+          python-version: "3.14"
+          enable-cache: false
+      - name: Audit runtime dependencies
+        run: |
+          uv export --locked --no-dev --no-emit-project \
+            --format requirements-txt \
+            --output-file "$RUNNER_TEMP/runtime-requirements.txt"
+          uvx --from pip-audit pip-audit \
+            --requirement "$RUNNER_TEMP/runtime-requirements.txt" \
+            --progress-spinner off
+      - name: Install verified Gitleaks release
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl --fail --location --silent --show-error \
+            --output "$RUNNER_TEMP/$archive" "$base/$archive"
+          curl --fail --location --silent --show-error \
+            --output "$RUNNER_TEMP/checksums.txt" \
+            "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          grep "  $archive$" "$RUNNER_TEMP/checksums.txt" \
+            > "$RUNNER_TEMP/gitleaks.sha256"
+          cd "$RUNNER_TEMP"
+          sha256sum --check gitleaks.sha256
+          tar --extract --gzip --file "$archive" gitleaks
+      - name: Scan complete Git history
+        run: >-
+          "$RUNNER_TEMP/gitleaks" git --redact=100 --log-opts=--all .
+
+  package:
+    name: Package
+    needs: [quality, markdown, test, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.12.2
+          python-version: "3.14"
+          enable-cache: false
+      - name: Build wheel and source archive
+        run: uv build --out-dir dist
+      - name: Install and check the wheel
+        run: |
+          wheel=$(find dist -maxdepth 1 -type f -name '*.whl' -print -quit)
+          test -n "$wheel"
+          uv venv --python 3.14 "$RUNNER_TEMP/package-venv"
+          uv pip install \
+            --python "$RUNNER_TEMP/package-venv/bin/python" "$wheel"
+          "$RUNNER_TEMP/package-venv/bin/jira2md" --version
+          "$RUNNER_TEMP/package-venv/bin/jira2md" --help > /dev/null
+          "$RUNNER_TEMP/package-venv/bin/jira2md-api" --version
+      - name: Upload release candidates
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: distributions
+          path: dist/*
+          if-no-files-found: error

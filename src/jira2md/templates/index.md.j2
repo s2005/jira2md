@@ -1,0 +1,14 @@
+# Index
+
+{% if config.frontmatter %}
+---
+generated: {{ now | isodate }}
+count: {{ issues | length }}
+---
+{% endif %}
+
+| Key | Summary | Type | Status |
+| --- | ------- | ---- | ------ |
+{% for issue in issues %}
+| {{ issue.key }} | {{ issue.summary }} | {{ issue.issue_type }} | {{ issue.status }} |
+{% endfor %}

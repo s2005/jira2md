@@ -1,0 +1,14 @@
+# Release Notes
+
+{% for version, vgroup in issues | groupby("fix_versions.0", default="Unscheduled") %}
+## {{ version }}
+
+{% for type_name, tgroup in vgroup | groupby("issue_type") %}
+### {{ type_name }}
+
+{% for issue in tgroup %}
+- **{{ issue.key }}** -- {{ issue.summary }}
+{% endfor %}
+
+{% endfor %}
+{% endfor %}
