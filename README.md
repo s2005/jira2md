@@ -120,3 +120,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change. Report securi
 ## License
 
 [MIT](LICENSE). Not an official Atlassian product.
+
+## Acknowledgements
+
+`jira2md` was inspired by the
+[mcp-atlassian project](https://github.com/sooperset/mcp-atlassian). Thanks to
+the project's author and contributors for their work.
